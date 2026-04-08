@@ -243,33 +243,33 @@ class TestGraders:
 
     # Grader 1: Root Cause Accuracy
     def test_root_cause_exact_match(self):
-        assert grade_root_cause("OOM", "OOM") == 1.0
+        assert grade_root_cause("OOM", "OOM") == pytest.approx(1.0, abs=0.01)
 
     def test_root_cause_related(self):
-        assert grade_root_cause("MEMORY_LEAK", "OOM") == 0.5
-        assert grade_root_cause("OOM", "MEMORY_LEAK") == 0.5
+        assert grade_root_cause("MEMORY_LEAK", "OOM") == pytest.approx(0.5, abs=0.01)
+        assert grade_root_cause("OOM", "MEMORY_LEAK") == pytest.approx(0.5, abs=0.01)
 
     def test_root_cause_wrong(self):
-        assert grade_root_cause("CONFIG_ERROR", "OOM") == 0.0
+        assert grade_root_cause("CONFIG_ERROR", "OOM") == pytest.approx(0.0, abs=0.01)
 
     def test_root_cause_none(self):
-        assert grade_root_cause(None, "OOM") == 0.0
+        assert grade_root_cause(None, "OOM") == pytest.approx(0.0, abs=0.01)
 
     def test_root_cause_case_insensitive(self):
-        assert grade_root_cause("oom", "OOM") == 1.0
+        assert grade_root_cause("oom", "OOM") == pytest.approx(1.0, abs=0.01)
 
     # Grader 1b: Severity
     def test_severity_exact(self):
-        assert grade_severity("P1", "P1") == 1.0
+        assert grade_severity("P1", "P1") == pytest.approx(1.0, abs=0.01)
 
     def test_severity_off_by_one(self):
-        assert grade_severity("P2", "P1") == 0.5
+        assert grade_severity("P2", "P1") == pytest.approx(0.5, abs=0.01)
 
     def test_severity_off_by_two(self):
-        assert grade_severity("P3", "P1") == 0.0
+        assert grade_severity("P3", "P1") == pytest.approx(0.0, abs=0.01)
 
     def test_severity_none(self):
-        assert grade_severity(None, "P1") == 0.0
+        assert grade_severity(None, "P1") == pytest.approx(0.0, abs=0.01)
 
     # Grader 2: Runbook Coverage
     def test_runbook_perfect(self):
@@ -284,21 +284,21 @@ class TestGraders:
         assert 0.3 < score < 0.7
 
     def test_runbook_empty(self):
-        assert grade_runbook_coverage([], ["get_service_status", "close_incident"]) == 0.0
+        assert grade_runbook_coverage([], ["get_service_status", "close_incident"]) == pytest.approx(0.0, abs=0.01)
 
     def test_runbook_empty_correct(self):
-        assert grade_runbook_coverage(["something"], []) == 0.0
+        assert grade_runbook_coverage(["something"], []) == pytest.approx(0.0, abs=0.01)
 
     # Grader 3: System State
     def test_state_resolved(self):
         final = {"status": "healthy", "error_rate_pct": 0.1, "memory_mb": 1200}
         target = {"status": "healthy", "error_rate_pct": 0.1, "memory_mb": 1200}
-        assert grade_system_state(final, target) == 1.0
+        assert grade_system_state(final, target) == pytest.approx(1.0, abs=0.01)
 
     def test_state_degraded(self):
         final = {"status": "degraded", "error_rate_pct": 25.0, "memory_mb": 4000}
         target = {"status": "healthy", "error_rate_pct": 0.1, "memory_mb": 1200}
-        assert grade_system_state(final, target) == 0.0
+        assert grade_system_state(final, target) == pytest.approx(0.0, abs=0.01)
 
     def test_state_partial(self):
         final = {"status": "healthy", "error_rate_pct": 0.5, "memory_mb": 1500}
@@ -314,7 +314,7 @@ class TestGraders:
             "We fixed it by scaling the service. "
             "To prevent this in the future, we added memory alerts."
         )
-        assert grade_post_mortem(text) == 1.0
+        assert grade_post_mortem(text) == pytest.approx(1.0, abs=0.01)
 
     def test_postmortem_partial(self):
         text = "The incident was caused by OOM. We restarted it."
@@ -322,8 +322,8 @@ class TestGraders:
         assert 0.25 <= score <= 0.75
 
     def test_postmortem_empty(self):
-        assert grade_post_mortem("") == 0.0
-        assert grade_post_mortem(None) == 0.0
+        assert grade_post_mortem("") == pytest.approx(0.0, abs=0.01)
+        assert grade_post_mortem(None) == pytest.approx(0.0, abs=0.01)
 
     # Episode Score
     def test_episode_score_perfect_hard(self):
@@ -339,7 +339,7 @@ class TestGraders:
     def test_episode_score_zero(self):
         score = compute_episode_score(0.0, 0.0, 0.0, 0.0, 0.0,
                                        task_mode="full_incident_response")
-        assert score == 0.0
+        assert score == pytest.approx(0.0, abs=0.01)
 
 
 # ── Environment Tests ────────────────────────────────────────────────────
@@ -416,8 +416,8 @@ class TestIncidentIQEnvironment:
             root_cause=env._scenario["root_cause"],
             severity=env._scenario["severity"],
         )
-        assert result["root_cause_score"] == 1.0
-        assert result["severity_score"] == 1.0
+        assert result["root_cause_score"] == pytest.approx(1.0, abs=0.01)
+        assert result["severity_score"] == pytest.approx(1.0, abs=0.01)
         assert result["done"] is True
         assert result["reward"] > 0
 
@@ -534,7 +534,7 @@ class TestIncidentIQEnvironment:
             "We fixed it by restarting. "
             "To prevent this in the future, we will add alerts.",
         )
-        assert result["quality_score"] == 1.0
+        assert result["quality_score"] == pytest.approx(1.0, abs=0.01)
         assert result["reward"] > 0
 
     # ── Close Incident ──
@@ -557,7 +557,7 @@ class TestIncidentIQEnvironment:
         assert "episode_score" in result
         assert "scores" in result
         assert "details" in result
-        assert result["scores"]["root_cause_accuracy"] == 1.0
+        assert result["scores"]["root_cause_accuracy"] == pytest.approx(1.0, abs=0.01)
 
     def test_close_without_verification_penalized(self, env):
         env.reset(task_mode="runbook_execution")
@@ -629,7 +629,7 @@ class TestFullWorkflows:
             "classify_root_cause", root_cause=rc, severity=sev
         )
         assert result["done"] is True
-        assert result["root_cause_score"] == 1.0
+        assert result["root_cause_score"] == pytest.approx(1.0, abs=0.01)
         assert env._cumulative_reward > 0.5
 
     def test_runbook_execution_full_workflow(self, env):
@@ -718,4 +718,4 @@ class TestFullWorkflows:
                 root_cause=scenario["root_cause"],
                 severity=scenario["severity"],
             )
-            assert result["root_cause_score"] == 1.0
+            assert result["root_cause_score"] == pytest.approx(1.0, abs=0.01)

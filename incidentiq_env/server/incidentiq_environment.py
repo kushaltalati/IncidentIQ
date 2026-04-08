@@ -561,9 +561,9 @@ class IncidentIQEnvironment(MCPEnvironment):
         sev_score = grade_severity(predicted_sev, ground_truth_sev)
 
         reward = 0.0
-        if rc_score == 1.0:
+        if rc_score > 0.9:
             reward += 0.50
-        elif rc_score == 0.5:
+        elif rc_score > 0.3:
             reward += 0.20
         else:
             reward -= 0.30

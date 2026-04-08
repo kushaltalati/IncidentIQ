@@ -10,6 +10,12 @@ Four graders evaluate different aspects of incident response:
 
 from typing import Any
 
+# Clamp score to strictly (0, 1) — validators reject exact 0.0 and 1.0.
+_EPSILON = 0.001
+
+def _clamp(score: float) -> float:
+    return max(_EPSILON, min(1.0 - _EPSILON, score))
+
 # Related root cause categories for partial credit.
 RELATED_CATEGORIES: dict[str, list[str]] = {
     "OOM": ["MEMORY_LEAK"],
@@ -79,17 +85,17 @@ def grade_root_cause(predicted: str | None, ground_truth: str) -> float:
         1.0 for exact match, 0.5 for related category, 0.0 for wrong.
     """
     if not predicted:
-        return 0.0
+        return _clamp(0.0)
     predicted = predicted.upper().strip()
     ground_truth = ground_truth.upper().strip()
 
     if predicted == ground_truth:
-        return 1.0
+        return _clamp(1.0)
 
     if predicted in RELATED_CATEGORIES.get(ground_truth, []):
-        return 0.5
+        return _clamp(0.5)
 
-    return 0.0
+    return _clamp(0.0)
 
 
 def grade_severity(predicted: str | None, ground_truth: str) -> float:
@@ -97,22 +103,22 @@ def grade_severity(predicted: str | None, ground_truth: str) -> float:
     Grade severity classification accuracy.
 
     Returns:
-        1.0 for exact match, 0.5 for off-by-one, 0.0 for wrong.
+        ~1.0 for exact match, 0.5 for off-by-one, ~0.0 for wrong.
     """
     if not predicted:
-        return 0.0
+        return _clamp(0.0)
 
     severity_order = {"P1": 1, "P2": 2, "P3": 3}
     pred_val = severity_order.get(predicted.upper().strip(), 0)
     truth_val = severity_order.get(ground_truth.upper().strip(), 0)
 
     if pred_val == 0 or truth_val == 0:
-        return 0.0
+        return _clamp(0.0)
     if pred_val == truth_val:
-        return 1.0
+        return _clamp(1.0)
     if abs(pred_val - truth_val) == 1:
-        return 0.5
-    return 0.0
+        return _clamp(0.5)
+    return _clamp(0.0)
 
 
 def _grade_step_order(executed: list[str], correct: list[str]) -> float:
@@ -122,7 +128,7 @@ def _grade_step_order(executed: list[str], correct: list[str]) -> float:
     by consuming matched positions from the correct runbook.
     """
     if not executed or not correct:
-        return 0.0
+        return _clamp(0.0)
 
     # Build list of indices by greedily matching executed steps to correct steps
     remaining = list(range(len(correct)))
@@ -135,7 +141,7 @@ def _grade_step_order(executed: list[str], correct: list[str]) -> float:
                 break
 
     if len(matched_indices) <= 1:
-        return 1.0 if matched_indices else 0.0
+        return _clamp(1.0) if matched_indices else _clamp(0.0)
 
     # Check if matched indices are monotonically increasing (correct order)
     in_order = sum(
@@ -143,7 +149,7 @@ def _grade_step_order(executed: list[str], correct: list[str]) -> float:
         if matched_indices[i] > matched_indices[i - 1]
     )
 
-    return in_order / (len(matched_indices) - 1)
+    return _clamp(in_order / (len(matched_indices) - 1))
 
 
 def grade_runbook_coverage(
@@ -159,7 +165,7 @@ def grade_runbook_coverage(
         Weighted score: 80% coverage + 20% order correctness.
     """
     if not correct_steps:
-        return 0.0
+        return _clamp(0.0)
 
     # Count-based coverage: handles repeated steps properly
     # E.g., if runbook has get_service_status x2, agent must call it x2
@@ -176,7 +182,7 @@ def grade_runbook_coverage(
 
     order_score = _grade_step_order(executed_steps, correct_steps)
 
-    return min(1.0, coverage * 0.8 + order_score * 0.2)
+    return _clamp(min(1.0, coverage * 0.8 + order_score * 0.2))
 
 
 def grade_system_state(
@@ -203,8 +209,8 @@ def grade_system_state(
             count += 1
 
     if count == 0:
-        return 0.0
-    return score / count
+        return _clamp(0.0)
+    return _clamp(score / count)
 
 
 def grade_post_mortem(text: str | None) -> float:
@@ -212,10 +218,10 @@ def grade_post_mortem(text: str | None) -> float:
     Grade post-mortem quality based on required section coverage.
 
     Returns:
-        0.25 per section found (max 1.0).
+        0.25 per section found (max ~1.0).
     """
     if not text:
-        return 0.0
+        return _clamp(0.0)
 
     score = 0.0
     text_lower = text.lower()
@@ -224,7 +230,7 @@ def grade_post_mortem(text: str | None) -> float:
         if any(kw.lower() in text_lower for kw in keywords):
             score += 0.25
 
-    return score
+    return _clamp(score)
 
 
 def compute_episode_score(
@@ -246,7 +252,7 @@ def compute_episode_score(
     """
     w = TASK_WEIGHTS.get(task_mode, TASK_WEIGHTS["full_incident_response"])
 
-    return (
+    raw = (
         w["root_cause"] * root_cause_score
         + w.get("severity", 0.0) * severity_score
         + w["runbook"] * runbook_score
@@ -254,3 +260,4 @@ def compute_episode_score(
         + w["postmortem"] * postmortem_score
         + w["efficiency"] * max(0.0, efficiency_bonus)
     )
+    return _clamp(raw)
