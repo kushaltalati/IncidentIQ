@@ -78,6 +78,8 @@ and verifies resolution — just like a real engineer.
 | Post-mortem quality | 10% |
 | Efficiency bonus | 5% |
 
+> **Note:** Post-Mortem (PM) scoring is only applied to Hard difficulty tasks, as they require multi-step runbook execution and a written post-incident analysis. Easy and Medium tasks omit PM by design.
+
 ## Setup
 
 ### Local Run
@@ -96,14 +98,14 @@ PYTHONPATH=src:envs uv run python inference.py
 ### Docker
 ```bash
 docker build -t incidentiq-env -f server/Dockerfile .
-docker run -p 8000:8000 incidentiq-env
+docker run -p 7860:7860 incidentiq-env
 ```
 
 ### Client Usage
 ```python
 from incidentiq_env import IncidentIQEnv
 
-with IncidentIQEnv(base_url="http://localhost:8000").sync() as env:
+with IncidentIQEnv(base_url="http://localhost:7860").sync() as env:
     env.reset(task_mode="full_incident_response")
     
     instr = env.call_tool("get_instructions")

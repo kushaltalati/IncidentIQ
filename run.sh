@@ -10,10 +10,15 @@ set -e
 cd "$(dirname "$0")"
 export PYTHONPATH=".:$PYTHONPATH"
 
+# Activate the project venv if it exists
+if [ -f .venv/bin/activate ]; then
+  source .venv/bin/activate
+fi
+
 case "${1:-help}" in
   server)
-    echo "Starting IncidentIQ server on http://localhost:8000"
-    python -m uvicorn incidentiq_env.server.app:app --host 0.0.0.0 --port 8000
+    echo "Starting IncidentIQ server on http://localhost:7860"
+    python -m uvicorn incidentiq_env.server.app:app --host 0.0.0.0 --port 7860
     ;;
   test)
     python -m pytest test_incidentiq_environment.py -v --tb=short

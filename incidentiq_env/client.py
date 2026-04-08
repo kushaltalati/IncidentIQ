@@ -13,7 +13,7 @@ class IncidentIQEnv(MCPToolClient):
     - step(action): Execute an action
 
     Example:
-        >>> with IncidentIQEnv(base_url="http://localhost:8000").sync() as env:
+        >>> with IncidentIQEnv(base_url="http://localhost:7860").sync() as env:
         ...     env.reset(task_mode="alert_triage")
         ...     instructions = env.call_tool("get_instructions")
         ...     result = env.call_tool("classify_root_cause",

@@ -2,8 +2,8 @@ spec_version: 1
 name: incidentiq_env
 type: space
 runtime: fastapi
-app: server.app:app
-port: 7860
+app: incidentiq_env.server.app:app
+port: 8000
 description: "IncidentIQ — Autonomous SRE Incident Response. Triage alerts, diagnose root causes, execute remediation runbooks, and resolve production incidents."
 tags:
   - openenv
