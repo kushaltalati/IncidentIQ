@@ -476,7 +476,7 @@ class IncidentIQEnvironment(MCPEnvironment):
             reward += 0.10 * pm_score
             result = {
                 "recorded": True,
-                "quality_score": round(pm_score, 2),
+                "quality_score": round(pm_score, 4),
             }
 
         elif action_type == "close_incident":
@@ -575,8 +575,8 @@ class IncidentIQEnvironment(MCPEnvironment):
             "classified": True,
             "root_cause": predicted_rc,
             "severity": predicted_sev,
-            "root_cause_score": round(rc_score, 2),
-            "severity_score": round(sev_score, 2),
+            "root_cause_score": round(rc_score, 4),
+            "severity_score": round(sev_score, 4),
         }
 
         # For alert_triage, classification can end the episode
@@ -723,11 +723,11 @@ class IncidentIQEnvironment(MCPEnvironment):
             "incident_closed": True,
             "episode_score": round(episode_score, 4),
             "scores": {
-                "root_cause_accuracy": round(rc_score, 2),
-                "severity_accuracy": round(sev_score, 2),
-                "runbook_coverage": round(runbook_score, 2),
-                "system_state": round(state_score, 2),
-                "post_mortem_quality": round(pm_score, 2),
+                "root_cause_accuracy": round(rc_score, 4),
+                "severity_accuracy": round(sev_score, 4),
+                "runbook_coverage": round(runbook_score, 4),
+                "system_state": round(state_score, 4),
+                "post_mortem_quality": round(pm_score, 4),
                 "efficiency_bonus": round(efficiency_bonus, 2),
             },
             "details": {
