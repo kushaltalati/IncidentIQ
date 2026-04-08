@@ -24,7 +24,10 @@ if HF_TOKEN is None:
 
 client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
-from incidentiq_env import IncidentIQEnv
+try:
+    from incidentiq_env import IncidentIQEnv
+except ModuleNotFoundError:
+    from openenv.core.mcp_client import MCPToolClient as IncidentIQEnv
 
 SYSTEM_PROMPT = """You are an expert SRE (Site Reliability Engineer) responding to a production incident.
 
