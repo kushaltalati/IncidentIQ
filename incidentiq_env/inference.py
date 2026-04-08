@@ -106,7 +106,7 @@ def run_task(task_mode: str) -> None:
     try:
         with IncidentIQEnv(base_url=ENV_URL).sync() as env:
             env.reset(task_mode=task_mode)
-            print(f"[START] task={task_mode} env=incidentiq model={MODEL_NAME}")
+            print(f"[START] task={task_mode} env=incidentiq model={MODEL_NAME}", flush=True)
 
             done = False
             while not done and step < MAX_STEPS:
@@ -142,7 +142,8 @@ def run_task(task_mode: str) -> None:
                 print(
                     f"[STEP] step={step} action={tool_name} "
                     f"reward={reward:.2f} done={'true' if done else 'false'} "
-                    f"error={last_error}"
+                    f"error={last_error}",
+                    flush=True,
                 )
 
                 # Add result to conversation history
@@ -157,13 +158,18 @@ def run_task(task_mode: str) -> None:
         last_error = str(e)[:80]
         print(
             f"[STEP] step={step + 1} action=null "
-            f"reward=0.00 done=true error={last_error}"
+            f"reward=0.00 done=true error={last_error}",
+            flush=True,
         )
 
     finally:
         score = sum(all_rewards) / max(len(all_rewards), 1)
         rewards_str = ",".join(f"{r:.2f}" for r in all_rewards) if all_rewards else "0.00"
-        print(f"[END] success={'true' if success else 'false'} steps={step} score={score:.3f} rewards={rewards_str}")
+        print(
+            f"[END] success={'true' if success else 'false'} steps={step} "
+            f"score={score:.3f} rewards={rewards_str}",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":
