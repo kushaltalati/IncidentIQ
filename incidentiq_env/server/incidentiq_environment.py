@@ -335,13 +335,39 @@ class IncidentIQEnvironment(MCPEnvironment):
             },
         )
 
+    def _enrich_observation(self, obs: Observation) -> Observation:
+        """Extract reward/done from MCP tool result into the Observation fields."""
+        if obs.reward is None or obs.done is None:
+            result_data = None
+            if hasattr(obs, 'result') and obs.result is not None:
+                if hasattr(obs.result, 'data'):
+                    result_data = obs.result.data
+                elif hasattr(obs.result, 'structured_content'):
+                    sc = obs.result.structured_content
+                    if isinstance(sc, dict):
+                        result_data = sc.get('result')
+            if isinstance(result_data, dict):
+                if obs.reward is None:
+                    raw_reward = result_data.get('reward', 0.001)
+                    obs.reward = raw_reward if isinstance(raw_reward, (int, float)) else 0.001
+                if obs.done is None:
+                    obs.done = bool(result_data.get('done', False))
+            else:
+                if obs.reward is None:
+                    obs.reward = 0.001
+                if obs.done is None:
+                    obs.done = self._done
+        return obs
+
     def step(self, action: Action, timeout_s: Optional[float] = None, **kwargs: Any) -> Observation:
         self._state.step_count += 1
-        return super().step(action, timeout_s=timeout_s, **kwargs)
+        obs = super().step(action, timeout_s=timeout_s, **kwargs)
+        return self._enrich_observation(obs)
 
     async def step_async(self, action: Action, timeout_s: Optional[float] = None, **kwargs: Any) -> Observation:
         self._state.step_count += 1
-        return await super().step_async(action, timeout_s=timeout_s, **kwargs)
+        obs = await super().step_async(action, timeout_s=timeout_s, **kwargs)
+        return self._enrich_observation(obs)
 
     @property
     def state(self) -> State:
