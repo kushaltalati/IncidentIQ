@@ -357,7 +357,7 @@ class TestIncidentIQEnvironment:
     def test_reset_alert_triage(self, env):
         obs = env.reset(task_mode="alert_triage")
         assert obs.done is False
-        assert obs.reward == 0.0
+        assert obs.reward == pytest.approx(0.0, abs=0.01)
         assert obs.metadata["task_mode"] == "alert_triage"
         assert obs.metadata["max_steps"] == 5
 

@@ -164,7 +164,8 @@ def run_task(task_mode: str) -> None:
         )
 
     finally:
-        score = sum(all_rewards) / max(len(all_rewards), 1)
+        raw_score = sum(all_rewards) / max(len(all_rewards), 1)
+        score = max(0.001, min(0.999, raw_score))
         rewards_str = ",".join(f"{r:.2f}" for r in all_rewards) if all_rewards else "0.00"
         print(f"[END] success={'true' if success else 'false'} steps={step} score={score:.3f} rewards={rewards_str}")
 

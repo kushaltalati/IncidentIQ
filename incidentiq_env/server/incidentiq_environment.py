@@ -311,7 +311,7 @@ class IncidentIQEnvironment(MCPEnvironment):
 
         return Observation(
             done=False,
-            reward=0.0,
+            reward=0.001,
             metadata={
                 "status": "ready",
                 "task_mode": self._task_mode,
@@ -328,7 +328,7 @@ class IncidentIQEnvironment(MCPEnvironment):
     def _step_impl(self, action: Action, timeout_s: Optional[float] = None, **kwargs: Any) -> Observation:
         return Observation(
             done=False,
-            reward=0.0,
+            reward=0.001,
             metadata={
                 "error": f"Unknown action type: {type(action).__name__}. "
                 "Use MCP tools (get_service_status, classify_root_cause, etc.)."
@@ -434,8 +434,8 @@ class IncidentIQEnvironment(MCPEnvironment):
                 **result,
                 "step_number": self._step_number,
                 "steps_remaining": max(0, self._max_steps - self._step_number),
-                "reward": 0.0,
-                "cumulative_reward": round(self._cumulative_reward, 2),
+                "reward": 0.001,
+                "cumulative_reward": round(self._cumulative_reward, 4),
                 "done": False,
             }
 
@@ -500,8 +500,8 @@ class IncidentIQEnvironment(MCPEnvironment):
             **result,
             "step_number": self._step_number,
             "steps_remaining": max(0, self._max_steps - self._step_number),
-            "reward": round(reward, 2),
-            "cumulative_reward": round(self._cumulative_reward, 2),
+            "reward": round(reward, 4),
+            "cumulative_reward": round(self._cumulative_reward, 4),
             "done": self._done,
         }
 
@@ -695,16 +695,16 @@ class IncidentIQEnvironment(MCPEnvironment):
 
         pm_score = grade_post_mortem(self._post_mortem)
 
-        # Efficiency bonus
+        # Efficiency bonus (clamped to strict (0, 1))
         budget_pct = self._step_number / self._max_steps if self._max_steps > 0 else 1.0
         if budget_pct <= 0.50:
             efficiency_bonus = 0.20
         elif budget_pct <= 0.75:
             efficiency_bonus = 0.10
         elif budget_pct > 0.80:
-            efficiency_bonus = -0.10 * (budget_pct - 0.80) / 0.20
+            efficiency_bonus = max(0.001, -0.10 * (budget_pct - 0.80) / 0.20)
         else:
-            efficiency_bonus = 0.0
+            efficiency_bonus = 0.05
 
         episode_score = compute_episode_score(
             rc_score, runbook_score, state_score, pm_score, efficiency_bonus,
